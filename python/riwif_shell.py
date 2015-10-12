@@ -119,6 +119,9 @@ WWWWWWWWWWWWW
 	print "[~] Exit riwif shell : use -> quit"
 
 def main():
+	if len(sys.argv) < 3:
+		print "error"
+		sys.exit()
 	if len(sys.argv) > 3:
 		connexion('root','toor')
 	else:
