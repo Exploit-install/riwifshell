@@ -4,26 +4,31 @@ $pass = "098f6bcd4621d373cade4e832627b4f6";
 
 function mysql_riwif($host, $userw, $passw, $bdd, $query = NULL)
 {
-	$mysqli = new mysqli($host, $userw, $passw, $bdd);
-	if($query == NULL)
+	if($mysqli = new mysqli($host, $userw, $passw, $bdd))
 	{
-		if($mysqli->connect_errno) 
-    		echo 'Failed to connect to MySQL: (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
-		else
-			echo  'connected';
-	}
-	elseif($query != NULL)
-	{
-		if($dbs = $mysqli->query($query))
+		if($query == NULL)
 		{
-			while($fetch = mysqli_fetch_array($dbs, MYSQLI_NUM))
+			if($mysqli->connect_errno) 
+    			echo 'Failed to connect to MySQL: (' . $mysqli->connect_errno . ') ' . $mysqli->connect_error;
+			else
+				echo  'connected';
+		}
+		elseif($query != NULL)
+		{
+			if($dbs = $mysqli->query($query))
 			{
-				foreach ($fetch as $key => $value) {
-					echo $value."\n";
+				while($fetch = mysqli_fetch_array($dbs, MYSQLI_NUM))
+				{
+					foreach ($fetch as $key => $value) 
+					{
+						echo $value."\n";
+					}
 				}
 			}
 		}
 	}
+	else
+		echo 'no mysqli plugin';
 }
 
 $session_start = 0;
