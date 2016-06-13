@@ -16,6 +16,15 @@ function return_directory($path){
     die();
 }
 
+if(isset($_POST['viewfile']) && $_POST['viewfile'] != '' && is_file($_POST['viewfile'])){
+    if($open = file_get_contents($_POST['viewfile'])){
+        echo $open;
+        die();
+    }
+    echo "no";
+    die();
+}
+
 if(isset($_POST['directory']) && $_POST['directory'] != '' && isset($_POST['new']) && $_POST['new'] != ''){
     $directory = $_POST['directory'];
     $new_folder = $_POST['new'];
@@ -36,6 +45,18 @@ function get_self(){
 		$query = (isset($_SERVER["QUERY_STRING"])&&(!empty($_SERVER["QUERY_STRING"])))?"?".$_SERVER["QUERY_STRING"]:"";
 		return htmlspecialchars($_SERVER["REQUEST_URI"].$query,2 | 1);
 	}
+
+if(isset($_POST['inspector']) && $_POST['inspector'] != ''){
+    if(is_dir($_POST['inspector'])){
+        if($file = fopen($_POST['inspector'].'/inspector.py', 'a+')){
+            $content = file_get_contents("https://raw.githubusercontent.com/graniet/Inspector/master/inspector.py");
+            fwrite($file, $content);
+            fclose($file);
+            echo "ok";
+            die();
+        }
+    }
+}
 
 if(isset($_POST['explorer']) && $_POST['explorer'] != '' && isset($_POST["pwd"]) && $_POST['pwd'] != ''){
     $explorer = $_POST['explorer'];
@@ -161,6 +182,13 @@ return j.call(r(a),c)})),b))for(;i>h;h++)b(a[h],c,g?d:d.call(a[h],h,b(a[h],c)));
             height: 20px;
             padding: 5px;
         }
+        .error{
+            margin: 0;
+            background: #c0392b;
+            color: rgb(255, 255, 255);
+            height: 20px;
+            padding: 5px;
+        }
         table, th, td {
             border-left: 1px solid gainsboro;
             border-right: 1px solid gainsboro;
@@ -197,6 +225,47 @@ return j.call(r(a),c)})),b))for(;i>h;h++)b(a[h],c,g?d:d.call(a[h],h,b(a[h],c)));
             text-align: center;
             margin-top: 30px;
         }
+        .fileview{
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 10px;
+            border: 1px solid gainsboro;
+            display: none;
+            opacity: 0;
+            border-bottom: 0px;            
+        }
+        .fileHead{
+            height: 15px;
+            background-color: #2c3e50;
+            color: white;
+            font-family: monospace;
+            padding: 4px;
+            font-size: 0.8em;            
+        }
+        .contentf
+        {
+            width: 100%;
+            height: 400px;
+            border: none;
+            background: #43494e;
+            color: whitesmoke;
+        }
+        contentf:focus{
+            outline:0 !important;
+        }
+        ul{
+            margin: 0;
+        }
+        .lienmenu{
+            text-decoration: none;
+            color: #2c3e50;
+        }
+        li
+        {
+            display: inline-block;
+            padding: 5px;
+        }
     </style>
 </head>
 <body>
@@ -211,6 +280,18 @@ return j.call(r(a),c)})),b))for(;i>h;h++)b(a[h],c,g?d:d.call(a[h],h,b(a[h],c)));
     <div class="explorer">
         <div class="explorerHead"></div>
         <div class="containerExplorer"><p class="explorerload">Loading</p></div>
+    </div>
+    <div class="fileview">
+        <div class="fileHead"><div class="close">x</div></div>
+        <div class="fileMenu">
+            <ul>
+                <li><a class="lienmenu" href="#">Delete</a></li>
+                <li><a class="lienmenu" href="#">Edit</a></li>
+                <li><a class="lienmenu" href="#">Download</a></li>
+                <li><a class="lienmenu" id="close" href="#">Close</a></li>
+            </ul>
+        </div>
+        <div class="fileContent"><textarea class="contentf"></textarea></div>
     </div>
 </body>
 <script>
@@ -228,6 +309,52 @@ function directory_shower(){
             })
         })
 }
+
+function close(){
+    $('#close').click(function(){
+        $('.fileview').animate({
+            opacity: 0
+        }, 1000, function(){
+            $('.fileview').css('display', 'none');
+            $('.explorerHead').html(current);
+            $('.explorer').css('display', 'block');
+                            $('.explorer').animate({
+                                opacity: 1
+                            }, 1000, function(){
+                                $.post(original, {explorer:"1", pwd:current}, function(data){
+                                    $('.containerExplorer').html(data);
+                                    directory_shower();
+                                    file_viewer();
+                                });
+                            });
+        })
+    });
+}
+
+function file_viewer(){
+    $('.file').click(function(){
+        var file = $(this).html();
+        var string = current + "/" + file;
+        $.post(original, {viewfile:string}, function(data){
+           if(data != "no"){
+               $('.explorer').animate({
+                   opacity: 0
+               }, 1000, function(){
+                   $('.explorer').css('display', 'none');
+                   $('.fileview').css('display', 'block');
+                   $('.fileview').animate({
+                       opacity: 1
+                   }, 1000, function(){
+                       $('.fileHead').html(string);
+                       $('.contentf').html(data);
+                       close();
+                   })
+               })
+           } 
+        });
+    });
+}
+var current_file = "";
 var location_script = '<?= $_SERVER['SCRIPT_FILENAME'] ?>';
 var original = '<?php echo get_self(); ?>';
 var current = '<?= getcwd() ?>'
@@ -255,6 +382,17 @@ document.getElementById('command').addEventListener('keydown', function(e) {
                 })
             }
         }
+        else if(value == ":inspector"){
+            $.post(original, {inspector: current}, function(data){
+                if(data == "ok"){
+                    $('.container-terminal').append('<p class="information">Inspector downloaded !</p>');
+                }
+                else
+                {
+                    $('.container-terminal').append('<p class="error">Error on download.</p>');
+                }
+            })
+        }
         else if(value == ":explorer"){
             $('.explorerHead').html(current);
             $('.container-terminal').animate({
@@ -267,6 +405,7 @@ document.getElementById('command').addEventListener('keydown', function(e) {
                     $.post(original, {explorer:"1", pwd:current}, function(data){
                         $('.containerExplorer').html(data);
                         directory_shower();
+                        file_viewer();
                     });
                 });
             })
