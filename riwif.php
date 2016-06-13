@@ -16,9 +16,68 @@ function return_directory($path){
     die();
 }
 
+if(isset($_GET['download']) && $_GET['download'] != ''){
+    if(base64_decode($_GET['download'], true)){
+        $file_complet = base64_decode($_GET['download']);
+        if($file_complet != "" && file_exists("./" . basename($file_complet))) 
+        { 
+            $size = filesize("./" . basename($file_complet)); 
+            header("Content-Type: application/force-download; name=\"" . basename($file_complet) . "\""); 
+            header("Content-Transfer-Encoding: binary"); 
+            header("Content-Length: $size"); 
+            header("Content-Disposition: attachment; filename=\"" . basename($file_complet) . "\""); 
+            header("Expires: 0"); 
+            header("Cache-Control: no-cache, must-revalidate"); 
+            header("Pragma: no-cache"); 
+            readfile("./" . basename($file_complet)); 
+            exit(); 
+        } 
+    }
+    die();
+}
+
+if(isset($_POST['deletefile']) && $_POST['deletefile'] != ''){
+    if(is_file($_POST['deletefile'])){
+        if(unlink($_POST['deletefile'])){
+            echo "ok";
+            die();
+        }
+        else{
+            echo "no";
+            die();
+        }
+    }
+    echo "no";
+    die();
+}
+
+if(isset($_POST['updateFile']) && $_POST['updateFile'] != '' && isset($_POST['update']) && $_POST['update'] != ''){
+    if(base64_decode($_POST['updateFile'], true)){
+        $file = base64_decode($_POST['updateFile']);
+        if(is_file($file))
+        {
+            if(fopen($file, 'w')){
+                $file_open = fopen($file, 'w');
+                if(!base64_decode($_POST['update'], true)){
+                    echo "no";
+                    die();
+                }
+                $update = base64_decode($_POST['update']);
+                fwrite($file_open, $update);
+                fclose($file_open);
+                echo "ok";
+                die();
+            }
+        }
+    }
+    echo "no";
+    die();
+    
+}
+
 if(isset($_POST['viewfile']) && $_POST['viewfile'] != '' && is_file($_POST['viewfile'])){
     if($open = file_get_contents($_POST['viewfile'])){
-        echo $open;
+        echo strip_tags($open);
         die();
     }
     echo "no";
@@ -285,9 +344,9 @@ return j.call(r(a),c)})),b))for(;i>h;h++)b(a[h],c,g?d:d.call(a[h],h,b(a[h],c)));
         <div class="fileHead"><div class="close">x</div></div>
         <div class="fileMenu">
             <ul>
-                <li><a class="lienmenu" href="#">Delete</a></li>
-                <li><a class="lienmenu" href="#">Edit</a></li>
-                <li><a class="lienmenu" href="#">Download</a></li>
+                <li><a class="lienmenu" href="#" id="deleteFile">Delete</a></li>
+                <li><a class="lienmenu" href="#" id="editFile">Edit</a></li>
+                <li><a class="lienmenu" id="download" href="#">Download</a></li>
                 <li><a class="lienmenu" id="close" href="#">Close</a></li>
             </ul>
         </div>
@@ -332,12 +391,51 @@ function close(){
     });
 }
 
+function download(){
+    $('#download').click(function(){
+        var string = current + "/" + current_file;
+        document.location.href = original + "?download=" + Base64.encode(string);
+    });
+}    
+
+function editFile(){
+    $('#editFile').click(function(){
+        var string = current + "/" + current_file;
+        var update = $('.contentf').html();
+        string = Base64.encode(string);
+        update = Base64.encode(update);
+        $.post(original, {updateFile: string, update: update}, function(data){
+            if(data == "ok"){
+                alert('file '+current_file+' updated');
+            }
+            else{
+                alert ("can't update "+current_file);
+            }
+        })
+    });
+}
+    
+function deleteFile(){
+    $('#deleteFile').click(function(){
+        var string = current + "/" + current_file;
+        $.post(original, {deletefile: string}, function(data){
+            if(data == 'ok'){
+               alert('file deleted');
+            }
+            else{
+                alert("Error can't delete");
+            }
+        })
+    })
+}
+
 function file_viewer(){
     $('.file').click(function(){
         var file = $(this).html();
         var string = current + "/" + file;
         $.post(original, {viewfile:string}, function(data){
            if(data != "no"){
+               current_file = file;
                $('.explorer').animate({
                    opacity: 0
                }, 1000, function(){
@@ -349,12 +447,17 @@ function file_viewer(){
                        $('.fileHead').html(string);
                        $('.contentf').html(data);
                        close();
+                       download();
+                       deleteFile();
+                       editFile();
                    })
                })
            } 
         });
     });
 }
+var Base64={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",encode:function(e){var t="";var n,r,i,s,o,u,a;var f=0;e=Base64._utf8_encode(e);while(f<e.length){n=e.charCodeAt(f++);r=e.charCodeAt(f++);i=e.charCodeAt(f++);s=n>>2;o=(n&3)<<4|r>>4;u=(r&15)<<2|i>>6;a=i&63;if(isNaN(r)){u=a=64}else if(isNaN(i)){a=64}t=t+this._keyStr.charAt(s)+this._keyStr.charAt(o)+this._keyStr.charAt(u)+this._keyStr.charAt(a)}return t},decode:function(e){var t="";var n,r,i;var s,o,u,a;var f=0;e=e.replace(/[^A-Za-z0-9+/=]/g,"");while(f<e.length){s=this._keyStr.indexOf(e.charAt(f++));o=this._keyStr.indexOf(e.charAt(f++));u=this._keyStr.indexOf(e.charAt(f++));a=this._keyStr.indexOf(e.charAt(f++));n=s<<2|o>>4;r=(o&15)<<4|u>>2;i=(u&3)<<6|a;t=t+String.fromCharCode(n);if(u!=64){t=t+String.fromCharCode(r)}if(a!=64){t=t+String.fromCharCode(i)}}t=Base64._utf8_decode(t);return t},_utf8_encode:function(e){e=e.replace(/rn/g,"n");var t="";for(var n=0;n<e.length;n++){var r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r)}else if(r>127&&r<2048){t+=String.fromCharCode(r>>6|192);t+=String.fromCharCode(r&63|128)}else{t+=String.fromCharCode(r>>12|224);t+=String.fromCharCode(r>>6&63|128);t+=String.fromCharCode(r&63|128)}}return t},_utf8_decode:function(e){var t="";var n=0;var r=c1=c2=0;while(n<e.length){r=e.charCodeAt(n);if(r<128){t+=String.fromCharCode(r);n++}else if(r>191&&r<224){c2=e.charCodeAt(n+1);t+=String.fromCharCode((r&31)<<6|c2&63);n+=2}else{c2=e.charCodeAt(n+1);c3=e.charCodeAt(n+2);t+=String.fromCharCode((r&15)<<12|(c2&63)<<6|c3&63);n+=3}}return t}}
+
 var current_file = "";
 var location_script = '<?= $_SERVER['SCRIPT_FILENAME'] ?>';
 var original = '<?php echo get_self(); ?>';
