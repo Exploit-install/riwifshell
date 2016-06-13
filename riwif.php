@@ -304,6 +304,7 @@ function directory_shower(){
             $.post(original, {explorer:"1", pwd:current}, function(data){
                 $('.containerExplorer').html(data);
                     directory_shower();
+                    file_viewer();
                 })
                 $('label').html(current + " > ");
             })
