@@ -16,7 +16,7 @@ function get_self(){
 ?>
     <!-- <script src="jquery.js">
     </script> -->
-    <script src="https://raw.githubusercontent.com/graniet/riwifshell/master/content/jquery.js"></script>
+    <script src="https://rawgit.com/graniet/riwifshell/master/content/jquery.js"></script>
     <script>
         var location_script = '<?= $_SERVER["SCRIPT_FILENAME"] ?>';
         var original = '<?php echo get_self(); ?>';
