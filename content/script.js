@@ -176,7 +176,7 @@ document.getElementById('command').addEventListener('keydown', function(e) {
     }
     $('label').html(current + " > ");
 }, false);
-$(document).ready(function(){
+$(window).load(function(){
     $('label').html(current + " > ");
     if($('.container-terminal').html() == ''){
         $('.container-terminal').html('<p class="information">You can use :help</p>');
