@@ -1,0 +1,156 @@
+echo "<style>
+    html,body
+        {
+            margin: 0px;
+        }
+        .container-terminal
+        {
+            border-top: 1px solid gainsboro;
+            width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40%;
+            margin-top: 10px;
+            overflow: scroll;
+        }
+        header{
+            background-color: #2C3E50;
+            padding: 10px;
+            border-bottom: 1px solid #22313F;
+            color: whitesmoke;
+            font-size: 0.9em;
+        }
+        .command_line{padding-bottom: 5px; margin-left: auto; margin-right: auto; width: 80%;border-bottom: 1px solid gainsboro; }
+        .name{ font-family: monospace; }
+        label {
+            font-family: monospace;
+            font-size: 0.9em;
+            float: left;
+        }
+        input{
+            border: 0px;
+            margin-top: 0px;
+            padding-left: 5px;
+        }
+        input:focus{
+            outline:0 !important;
+        }
+        .information{
+            margin: 0;
+            background: #16a085;
+            color: rgb(255, 255, 255);
+            height: 20px;
+            padding: 5px;
+        }
+        .error{
+            margin: 0;
+            background: #c0392b;
+            color: rgb(255, 255, 255);
+            height: 20px;
+            padding: 5px;
+        }
+        table, th, td {
+            border-left: 1px solid gainsboro;
+            border-right: 1px solid gainsboro;
+            border-bottom: 1px solid gainsboro;
+            border-collapse: collapse;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+            text-align: left;    
+        }
+        .infotd{
+            text-align: left;
+        }
+        .explorer{
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 10px;
+            border: 1px solid gainsboro;
+            display: none;
+            opacity: 0;
+            border-bottom: 0px;
+        }
+        .explorerHead{
+            height: 15px;
+            background-color: #2c3e50;
+            color: white;
+            font-family: monospace;
+            padding: 4px;
+            font-size: 0.8em;
+        }
+        .explorerload{
+            text-align: center;
+            margin-top: 30px;
+        }
+        .fileview{
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 10px;
+            border: 1px solid gainsboro;
+            display: none;
+            opacity: 0;
+            border-bottom: 0px;            
+        }
+        .fileHead{
+            height: 15px;
+            background-color: #2c3e50;
+            color: white;
+            font-family: monospace;
+            padding: 4px;
+            font-size: 0.8em;            
+        }
+        .contentf
+        {
+            width: 100%;
+            height: 400px;
+            border: none;
+            background: #43494e;
+            color: whitesmoke;
+        }
+        contentf:focus{
+            outline:0 !important;
+        }
+        ul{
+            margin: 0;
+        }
+        .lienmenu{
+            text-decoration: none;
+            color: #2c3e50;
+        }
+        li
+        {
+            display: inline-block;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class='name'>Riwif@".gethostname()." AT ".$_SERVER['SCRIPT_FILENAME']."</div>
+    </header>
+    <div class='container-terminal'></div>
+    <div class='command_line'>
+        <label><b>".get_current_user()."</b>@".substr($_SERVER['SCRIPT_FILENAME'],1)." > </label>
+        <input id='command' type='text' autofocus/>
+    </div>
+    <div class='explorer'>
+        <div class='explorerHead'></div>
+        <div class='containerExplorer'><p class='explorerload'>Loading</p></div>
+    </div>
+    <div class='fileview'>
+        <div class='fileHead'><div class='close'>x</div></div>
+        <div class='fileMenu'>
+            <ul>
+                <li><a class='lienmenu' href='#' id='deleteFile'>Delete</a></li>
+                <li><a class='lienmenu' href='#' id='editFile'>Edit</a></li>
+                <li><a class='lienmenu' id='download' href='#'>Download</a></li>
+                <li><a class='lienmenu' id='close' href='#'>Close</a></li>
+            </ul>
+        </div>
+        <div class='fileContent'><textarea class='contentf'></textarea></div>
+    </div>
+";
